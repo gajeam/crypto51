@@ -1,16 +1,24 @@
 import datetime
 import json
 import requests
-
 import config
+import csv
+
+from apis.marketcap import MarketCap
 from apis.wtm import WTM
 from apis.nicehash import NiceHash
+from apis.hashstats import HashStats
 from libs import common
 
 if __name__ == '__main__':
- 
+
+    with open('data/whitelist.csv') as csvfile:
+        whitelist = list(csv.reader(csvfile))[0]
+
     nh = NiceHash()
-    wtm = WTM()
+    mc = MarketCap(whitelist)
+    hashstats = HashStats()
+    wtm = WTM(whitelist)
     coins = wtm.get_coin_data()
     allcoins = []
     btc_price = requests.get('https://whattomine.com/coins/1.json').json()['exchange_rate']
@@ -33,9 +41,9 @@ if __name__ == '__main__':
         # Details are: hash_rate, algorithm
         cost = nh.get_cost_global(coin_algorithm, coin_hashrate)
         nh_hash_ratio = nh.get_hash_percentage(coin_algorithm, coin_hashrate);
-
+        coin_algo_index = nh._get_algorithm_index(coin_algorithm)
         # Skip coins that NiceHash doesn't support
-        if cost is None:
+        if cost is None or cost == '?':
             print("!!! Skipping {} because of {}".format(coin_symbol, coin_algorithm))
             continue
 
@@ -46,24 +54,34 @@ if __name__ == '__main__':
         rentable_capacity = nh.get_capacity(coin_algorithm)
         rentable_price_btc = nh.get_algorithm_price(coin_algorithm)
 
+        coin_algorithm_type = mc.get_algorithm_type(coin_algorithm)
+        coin_market_cap_order = mc.get_coin_market_cap_order(coin_name)
+        coin_total_wattage = mc.get_total_wattage(coin_algorithm, coin_hashrate)
+
+        coin_mining_sd = hashstats.get_mining_shift_relative_sd(coin_algo_index)
+        coin_mining_daily_mean = hashstats.get_mining_daily_mean(coin_algo_index)
         allcoins.append({
             'symbol': coin_symbol,
             'name': coin_name,
-            'minethecoin_link': "https://google.com",
             'algorithm': coin_algorithm,
+            'algo_index': coin_algo_index,
+            'algo_type': coin_algorithm_type,
             'market_cap': coin_marketcap,
             'market_cap_pretty': common.get_pretty_money(coin_marketcap),
+            'market_cap_order': coin_market_cap_order,
             'hash_rate': coin_hashrate,
             'hash_rate_pretty': common.get_pretty_hash_rate(coin_hashrate),
-            'rentable_capacity': rentable_capacity,
-            'rentable_capacity_pretty': common.get_pretty_hash_rate(rentable_capacity),
-            'nicehash_market_link': 'https://www.nicehash.com/marketplace/{}'.format(nh.get_algorithm_name(coin_algorithm)),
+            'total_wattage': coin_total_wattage,
+            'mining_daily_avg': coin_mining_daily_mean,
+            'mining_sd': coin_mining_sd,
+            # 'network_vs_rentable_ratio': nh_hash_ratio,
+            # 'rentable_capacity': rentable_capacity,
+            # 'rentable_capacity_pretty': common.get_pretty_hash_rate(rentable_capacity),
+            # 'rentable_price_btc': rentable_price_btc,
+            # 'rentable_price_units': nh.get_units(coin_algorithm),
+            # 'rentable_price_usd_hour': '${:,.2f}'.format(rentable_price_btc * btc_price / 24.0),
             'attack_hourly_cost': cost * btc_price / 24.0 if cost != 0 else '?',
-            'attack_hourly_cost_pretty': '${:,.0f}'.format(cost * btc_price / 24.0) if cost != 0 else '?',
-            'network_vs_rentable_ratio': nh_hash_ratio,
-            'rentable_price_btc': rentable_price_btc,
-            'rentable_price_units': nh.get_units(coin_algorithm),
-            'rentable_price_usd_hour': '${:,.2f}'.format(rentable_price_btc * btc_price / 24.0)
+            'attack_hourly_cost_pretty': '${:,.0f}'.format(cost * btc_price / 24.0) if cost != 0 else '?'
         })
 
     # Sort by rank
@@ -72,5 +90,5 @@ if __name__ == '__main__':
         'coins': sorted(allcoins, key=lambda k: k['market_cap'], reverse=True)
     }
 
-    with open('dist/coins.json', 'w') as f:
+    with open('../dist/coins.json', 'w') as f:
         json.dump(results, f)

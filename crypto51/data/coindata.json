@@ -1,0 +1,61 @@
+{
+  "coins": {
+    "Bitcoin": {
+      "marketcap_order": 1
+    },
+    "Ethereum": {
+      "marketcap_order": 2
+    },
+    "Litecoin": {
+      "marketcap_order": 4
+    },
+    "BitcoinCashABC": {
+      "marketcap_order": 6
+    },
+    "BitcoinSV": {
+      "marketcap_order": 12
+    },
+    "EthereumClassic": {
+      "marketcap_order": 19
+    },
+    "Zcash": {
+      "marketcap_order": 22
+    },
+    "LitecoinCash": {
+      "marketcap_order": 378
+    },
+    "Zclassic": {
+      "marketcap_order": 365
+    },
+    "Callisto": {
+      "marketcap_order": 437
+    }
+  },
+  "algorithms": {
+    "SHA-256":{
+      "type": "ASIC",
+      "miner_hashing":14000000000000,
+      "watts_used":1370.0
+    },
+    "Ethash":{
+      "type": "GPU",
+      "miner_hashing":49500000,
+      "watts_used":190.0
+    },
+    "Equihash":{
+      "type": "GPU",
+      "miner_hashing":6200,
+      "watts_used":200.0
+    },
+    "Scrypt": {
+      "type": "ASIC",
+      "miner_hashing":1000000000,
+      "watts_used":1600.0
+    },
+    "X11": {
+      "type": "ASIC",
+      "miner_hashing":13000000000,
+      "watts_used":300.0
+    }
+  }
+}

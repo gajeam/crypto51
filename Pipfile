@@ -8,7 +8,8 @@ requests-html = "*"
 requests = "*"
 jinja2 = "*"
 pytz = "*"
-
+scipy = "*"
+pandas = "*"
 [dev-packages]
 pytest = "*"
 
